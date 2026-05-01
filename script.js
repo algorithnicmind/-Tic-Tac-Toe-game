@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cardO.classList.remove('active');
         cells.forEach(cell => {
             cell.innerText = "";
-            cell.classList.remove('x', 'o');
+            cell.classList.remove('x', 'o', 'winner');
         });
         modalOverlay.classList.remove('active');
     }
