@@ -1,4 +1,4 @@
-# Task Tracker - Tic-Tac-Toe Evolution
+# Task Tracker - Tactix Pro Evolution
 
 ## Progress: 100% ✅
 

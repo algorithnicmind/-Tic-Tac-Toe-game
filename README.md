@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="assets/banner.png" alt="TTT PRO Banner" width="100%">
+  <img src="assets/banner.png" alt="Tactix Pro Banner" width="100%">
   
-  # 🚀 TTT PRO: Premium Tic-Tac-Toe
+  # 🚀 Tactix Pro: Strategic Excellence
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
   [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-blue.svg)]()
   
-  **Experience the next evolution of Tic-Tac-Toe. Minimalist, Modern, and Masterfully crafted.**
+  **Experience the next evolution of strategy. Minimalist, Modern, and Masterfully crafted.**
   
   [Play Now](index.html) • [Report Bug](https://github.com/algorithnicmind/tic-toe-game/issues) • [Request Feature](https://github.com/algorithnicmind/tic-toe-game/issues)
 </div>
