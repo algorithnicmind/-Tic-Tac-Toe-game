@@ -86,7 +86,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (roundWon) {
             scores[currentPlayer]++;
             updateScoreboard();
-            showModal(`Victory!`, `Player ${currentPlayer} has won the match.`);
+            
+            // Highlight winning cells
+            for (let i = 0; i <= 7; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameState[winCondition[0]];
+                let b = gameState[winCondition[1]];
+                let c = gameState[winCondition[2]];
+                if (a === currentPlayer && b === currentPlayer && c === currentPlayer) {
+                    cells[winCondition[0]].classList.add('winner');
+                    cells[winCondition[1]].classList.add('winner');
+                    cells[winCondition[2]].classList.add('winner');
+                }
+            }
+
+            setTimeout(() => {
+                showModal(`Victory!`, `Player ${currentPlayer} has won the match.`);
+            }, 600);
+            
             gameActive = false;
             return;
         }
