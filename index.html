@@ -119,6 +119,25 @@
                     Player vs AI
                 </button>
             </div>
+
+            <div class="input-group">
+                <label>Grid Size</label>
+                <select id="grid-size" class="form-select">
+                    <option value="3" selected>3x3 Classic</option>
+                    <option value="4">4x4 Advanced</option>
+                    <option value="5">5x5 Pro</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="ai-difficulty-group" style="display: none;">
+                <label>AI Difficulty</label>
+                <select id="ai-difficulty" class="form-select">
+                    <option value="easy">Easy (Random)</option>
+                    <option value="medium">Medium (Defensive)</option>
+                    <option value="impossible" selected>Impossible (Minimax)</option>
+                </select>
+            </div>
+
             <div class="player-inputs">
                 <div class="input-group">
                     <label>Player 1 Name</label>
