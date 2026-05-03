@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeBtns = document.querySelectorAll('.mode-btn');
     const p2InputGroup = document.getElementById('p2-input-group');
     const p2Label = document.getElementById('p2-label');
+    const gridSizeSelect = document.getElementById('grid-size');
+    const aiDifficultySelect = document.getElementById('ai-difficulty');
+    const aiDifficultyGroup = document.getElementById('ai-difficulty-group');
     const startGameBtn = document.getElementById('start-game-btn');
     const exitGameBtn = document.getElementById('exit-game-btn');
     
@@ -32,10 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     let currentUser = JSON.parse(localStorage.getItem('ttt-user')) || null;
     let gameMode = 'pvp'; // 'pvp' or 'pve'
+    let aiDifficulty = 'impossible'; // 'easy', 'medium', 'impossible'
+    let currentGridSize = 3;
     let player1Name = 'Player X';
     let player2Name = 'Player O';
     let currentPlayer = 'X';
-    let gameState = ["", "", "", "", "", "", "", "", ""];
+    let gameState = [];
+    let winningConditions = [];
     let gameActive = true;
     let scores = { X: 0, O: 0 };
 
@@ -313,9 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (gameMode === 'pve') {
                 p2InputGroup.style.display = 'none';
+                aiDifficultyGroup.style.display = 'flex';
                 player2Name = 'Smart AI';
             } else {
                 p2InputGroup.style.display = 'flex';
+                aiDifficultyGroup.style.display = 'none';
                 player2Name = document.getElementById('p2-name').value || 'Player O';
             }
         });
@@ -323,14 +331,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startGameBtn.addEventListener('click', () => {
         player1Name = document.getElementById('p1-name').value || 'Player X';
+        currentGridSize = parseInt(gridSizeSelect.value);
+        aiDifficulty = aiDifficultySelect.value;
+        winningConditions = generateWinningConditions(currentGridSize);
+        board.style.setProperty('--grid-size', currentGridSize);
+
         if (gameMode === 'pvp') {
             player2Name = document.getElementById('p2-name').value || 'Player O';
         } else {
-            player2Name = 'Smart AI';
+            player2Name = aiDifficulty === 'easy' ? 'Easy AI' : aiDifficulty === 'medium' ? 'Medium AI' : 'Impossible AI';
         }
         
         labelX.innerText = player1Name.toUpperCase();
         labelO.innerText = player2Name.toUpperCase();
+        
+        createBoard();
         restartGame();
         navigateTo('game');
     });
@@ -379,13 +394,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let roundWon = false;
         let winLine = null;
 
-        for (let i = 0; i <= 7; i++) {
+        for (let i = 0; i < winningConditions.length; i++) {
             const winCondition = winningConditions[i];
-            let a = gameState[winCondition[0]];
-            let b = gameState[winCondition[1]];
-            let c = gameState[winCondition[2]];
-            if (a === '' || b === '' || c === '') continue;
-            if (a === b && b === c) {
+            let firstCell = gameState[winCondition[0]];
+            if (firstCell === '') continue;
+            
+            let allMatch = true;
+            for (let j = 1; j < winCondition.length; j++) {
+                if (gameState[winCondition[j]] !== firstCell) {
+                    allMatch = false;
+                    break;
+                }
+            }
+            if (allMatch) {
                 roundWon = true;
                 winLine = winCondition;
                 break;
@@ -396,7 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
             scores[currentPlayer]++;
             updateScoreboard();
             
-            winLine.forEach(idx => cells[idx].classList.add('winner'));
+            const allCells = document.querySelectorAll('.cell');
+            winLine.forEach(idx => allCells[idx].classList.add('winner'));
             
             const winnerName = currentPlayer === 'X' ? player1Name : player2Name;
             playWinSound();
@@ -429,37 +451,88 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.classList.add('active');
     }
 
+    function createBoard() {
+        board.innerHTML = '';
+        const totalCells = currentGridSize * currentGridSize;
+        gameState = new Array(totalCells).fill("");
+        
+        let fontSize = '3rem';
+        if (currentGridSize === 4) fontSize = '2.2rem';
+        if (currentGridSize === 5) fontSize = '1.8rem';
+
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.setAttribute('data-index', i);
+            cell.style.fontSize = fontSize;
+            cell.addEventListener('click', handleCellClick);
+            board.appendChild(cell);
+        }
+    }
+
     function restartGame() {
         gameActive = true;
         currentPlayer = "X";
-        gameState = ["", "", "", "", "", "", "", "", ""];
+        const totalCells = currentGridSize * currentGridSize;
+        gameState = new Array(totalCells).fill("");
         statusText.innerText = `${player1Name}'s Turn`;
         cardX.classList.add('active');
         cardO.classList.remove('active');
-        cells.forEach(cell => {
+        
+        const allCells = document.querySelectorAll('.cell');
+        allCells.forEach(cell => {
             cell.innerText = "";
             cell.classList.remove('x', 'o', 'winner');
         });
         modalOverlay.classList.remove('active');
     }
 
-    // --- AI Logic (Minimax) ---
+    // --- AI Logic (Minimax & Difficulties) ---
     function makeAiMove() {
         if (!gameActive) return;
         
-        const bestMove = getBestMove(gameState);
-        const cell = cells[bestMove];
-        handleCellPlayed(cell, bestMove);
+        let moveIndex;
+        const totalCells = currentGridSize * currentGridSize;
+        const availableMoves = [];
+        for (let i = 0; i < totalCells; i++) {
+            if (gameState[i] === "") availableMoves.push(i);
+        }
+
+        if (availableMoves.length === 0) return;
+
+        if (aiDifficulty === 'easy') {
+            moveIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        } else if (aiDifficulty === 'medium') {
+            if (Math.random() < 0.5) {
+                moveIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            } else {
+                moveIndex = getBestMove(gameState, 2); // Shallow depth
+            }
+        } else {
+            let maxDepth = currentGridSize === 3 ? 8 : (currentGridSize === 4 ? 4 : 3);
+            moveIndex = getBestMove(gameState, maxDepth);
+        }
+        
+        const allCells = document.querySelectorAll('.cell');
+        const cell = allCells[moveIndex];
+        handleCellPlayed(cell, moveIndex);
         handleResultValidation();
     }
 
-    function getBestMove(boardState) {
+    function getBestMove(boardState, maxDepth = 8) {
         let bestScore = -Infinity;
         let move;
-        for (let i = 0; i < 9; i++) {
+        const totalCells = currentGridSize * currentGridSize;
+        
+        let emptyCount = boardState.filter(s => s === "").length;
+        if (currentGridSize > 3 && emptyCount === totalCells) {
+            return Math.floor(totalCells / 2);
+        }
+
+        for (let i = 0; i < totalCells; i++) {
             if (boardState[i] === "") {
                 boardState[i] = "O";
-                let score = minimax(boardState, 0, false);
+                let score = minimax(boardState, 0, false, maxDepth, -Infinity, Infinity);
                 boardState[i] = "";
                 if (score > bestScore) {
                     bestScore = score;
@@ -467,34 +540,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        if (move === undefined) {
+            let empty = boardState.map((val, idx) => val === "" ? idx : -1).filter(idx => idx !== -1);
+            move = empty[0];
+        }
         return move;
     }
 
-    function minimax(boardState, depth, isMaximizing) {
+    function minimax(boardState, depth, isMaximizing, maxDepth, alpha, beta) {
         const result = checkWinner(boardState);
         if (result !== null) {
-            return result === "O" ? 10 : result === "X" ? -10 : 0;
+            return result === "O" ? 10 - depth : result === "X" ? depth - 10 : 0;
         }
+
+        if (depth >= maxDepth) return 0; 
+
+        const totalCells = currentGridSize * currentGridSize;
 
         if (isMaximizing) {
             let bestScore = -Infinity;
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < totalCells; i++) {
                 if (boardState[i] === "") {
                     boardState[i] = "O";
-                    let score = minimax(boardState, depth + 1, false);
+                    let score = minimax(boardState, depth + 1, false, maxDepth, alpha, beta);
                     boardState[i] = "";
                     bestScore = Math.max(score, bestScore);
+                    alpha = Math.max(alpha, score);
+                    if (beta <= alpha) break;
                 }
             }
             return bestScore;
         } else {
             let bestScore = Infinity;
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < totalCells; i++) {
                 if (boardState[i] === "") {
                     boardState[i] = "X";
-                    let score = minimax(boardState, depth + 1, true);
+                    let score = minimax(boardState, depth + 1, true, maxDepth, alpha, beta);
                     boardState[i] = "";
                     bestScore = Math.min(score, bestScore);
+                    beta = Math.min(beta, score);
+                    if (beta <= alpha) break;
                 }
             }
             return bestScore;
@@ -503,20 +588,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkWinner(boardState) {
         for (let i = 0; i < winningConditions.length; i++) {
-            const [a, b, c] = winningConditions[i];
-            if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
-                return boardState[a];
+            const winCondition = winningConditions[i];
+            let firstCell = boardState[winCondition[0]];
+            if (firstCell === '') continue;
+            
+            let allMatch = true;
+            for (let j = 1; j < winCondition.length; j++) {
+                if (boardState[winCondition[j]] !== firstCell) {
+                    allMatch = false;
+                    break;
+                }
             }
+            if (allMatch) return firstCell;
         }
         if (!boardState.includes("")) return "tie";
         return null;
     }
 
+    function generateWinningConditions(size) {
+        let conditions = [];
+        for (let r = 0; r < size; r++) {
+            let row = [];
+            for (let c = 0; c < size; c++) row.push(r * size + c);
+            conditions.push(row);
+        }
+        for (let c = 0; c < size; c++) {
+            let col = [];
+            for (let r = 0; r < size; r++) col.push(r * size + c);
+            conditions.push(col);
+        }
+        let diag1 = [];
+        let diag2 = [];
+        for (let i = 0; i < size; i++) {
+            diag1.push(i * size + i);
+            diag2.push(i * size + (size - 1 - i));
+        }
+        conditions.push(diag1);
+        conditions.push(diag2);
+        return conditions;
+    }
+
     // --- Init ---
-    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
     restartBtn.addEventListener('click', restartGame);
     playAgainBtn.addEventListener('click', restartGame);
     
+    const audioBtn = document.getElementById('audio-toggle-btn');
+    if (audioBtn) {
+        audioBtn.addEventListener('click', toggleAudio);
+    }
+    
     updateAuthUI();
     renderHistory();
+    winningConditions = generateWinningConditions(3); // init defaults
+    createBoard();
 });
