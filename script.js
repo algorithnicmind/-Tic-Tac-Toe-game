@@ -39,6 +39,181 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameActive = true;
     let scores = { X: 0, O: 0 };
 
+    // --- Audio System ---
+    let audioCtx = null;
+    let isAudioEnabled = false;
+    let ambientOscillator = null;
+    let ambientGain = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function toggleAudio() {
+        isAudioEnabled = !isAudioEnabled;
+        const btn = document.getElementById('audio-toggle-btn');
+        if (btn) btn.innerText = isAudioEnabled ? '🔊' : '🔇';
+        
+        if (isAudioEnabled) {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            playAmbient();
+        } else {
+            stopAmbient();
+        }
+    }
+
+    function playAmbient() {
+        if (!isAudioEnabled || !audioCtx) return;
+        if (ambientOscillator) return;
+        
+        ambientOscillator = audioCtx.createOscillator();
+        ambientGain = audioCtx.createGain();
+        
+        ambientOscillator.type = 'sine';
+        ambientOscillator.frequency.setValueAtTime(55, audioCtx.currentTime);
+        
+        const lfo = audioCtx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 0.1;
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 5;
+        lfo.connect(lfoGain);
+        lfoGain.connect(ambientOscillator.frequency);
+        lfo.start();
+
+        ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        ambientGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 2);
+        
+        ambientOscillator.connect(ambientGain);
+        ambientGain.connect(audioCtx.destination);
+        ambientOscillator.start();
+    }
+
+    function stopAmbient() {
+        if (ambientOscillator && ambientGain) {
+            ambientGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+            setTimeout(() => {
+                if (ambientOscillator) {
+                    ambientOscillator.stop();
+                    ambientOscillator.disconnect();
+                    ambientOscillator = null;
+                }
+            }, 1000);
+        }
+    }
+
+    function playMoveSound(player) {
+        if (!isAudioEnabled || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = player === 'X' ? 'square' : 'triangle';
+        osc.frequency.setValueAtTime(player === 'X' ? 880 : 1200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(player === 'X' ? 440 : 600, audioCtx.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playWinSound() {
+        if (!isAudioEnabled || !audioCtx) return;
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.1);
+            gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + i * 0.1 + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.1 + 0.5);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start(audioCtx.currentTime + i * 0.1);
+            osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
+        });
+    }
+
+    function playDrawSound() {
+        if (!isAudioEnabled || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    // --- History Logic ---
+    function saveMatchHistory(winner) {
+        const history = JSON.parse(localStorage.getItem('ttt-history')) || [];
+        const match = {
+            date: new Date().toLocaleString(),
+            p1: player1Name,
+            p2: player2Name,
+            winner: winner,
+            mode: gameMode
+        };
+        history.unshift(match);
+        if (history.length > 20) history.pop();
+        localStorage.setItem('ttt-history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const historyList = document.getElementById('history-list');
+        if (!historyList) return;
+        const history = JSON.parse(localStorage.getItem('ttt-history')) || [];
+        
+        if (history.length === 0) {
+            historyList.innerHTML = '<p class="empty-msg">No match history available.</p>';
+            return;
+        }
+
+        historyList.innerHTML = history.map(match => {
+            let resultText = '';
+            let resultClass = '';
+            if (match.winner === 'tie') {
+                resultText = 'Draw';
+                resultClass = 'draw';
+            } else {
+                resultText = `${match.winner} Won`;
+                resultClass = 'win';
+            }
+
+            return `
+                <div class="history-item">
+                    <div class="history-info">
+                        <div class="history-date">${match.date} &bull; ${match.mode === 'pvp' ? 'PvP' : 'PvE'}</div>
+                        <div class="history-players">${match.p1} vs ${match.p2}</div>
+                    </div>
+                    <div class="history-result ${resultClass}">${resultText}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
     const winningConditions = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
         [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -74,8 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Auth Logic ---
     function updateAuthUI() {
         const navAuth = document.getElementById('nav-user-info');
+        const audioBtnHtml = `<button id="audio-toggle-btn" class="btn-sm secondary" title="Toggle Audio">${isAudioEnabled ? '🔊' : '🔇'}</button>`;
+        
         if (currentUser) {
             navAuth.innerHTML = `
+                ${audioBtnHtml}
                 <span class="user-greeting">Hi, ${currentUser.username}</span>
                 <button class="btn-sm secondary" id="logout-btn">Logout</button>
             `;
@@ -86,9 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigateTo('home');
             });
         } else {
-            navAuth.innerHTML = `<button class="btn-sm secondary" id="nav-login-btn">Login</button>`;
+            navAuth.innerHTML = `${audioBtnHtml}<button class="btn-sm secondary" id="nav-login-btn">Login</button>`;
             document.getElementById('nav-login-btn').addEventListener('click', () => navigateTo('auth'));
         }
+        
+        document.getElementById('audio-toggle-btn').addEventListener('click', toggleAudio);
     }
 
     loginTab.addEventListener('click', () => {
@@ -178,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState[clickedCellIndex] = currentPlayer;
         clickedCell.innerText = currentPlayer;
         clickedCell.classList.add(currentPlayer.toLowerCase());
+        playMoveSound(currentPlayer);
     }
 
     function handlePlayerChange() {
@@ -218,12 +399,16 @@ document.addEventListener('DOMContentLoaded', () => {
             winLine.forEach(idx => cells[idx].classList.add('winner'));
             
             const winnerName = currentPlayer === 'X' ? player1Name : player2Name;
+            playWinSound();
+            saveMatchHistory(winnerName);
             setTimeout(() => showModal(`Victory!`, `${winnerName} has won the match.`), 600);
             gameActive = false;
             return true;
         }
 
         if (!gameState.includes("")) {
+            playDrawSound();
+            saveMatchHistory('tie');
             showModal(`Draw!`, `It's a tie. Great game both of you!`);
             gameActive = false;
             return true;
@@ -331,5 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cells.forEach(cell => cell.addEventListener('click', handleCellClick));
     restartBtn.addEventListener('click', restartGame);
     playAgainBtn.addEventListener('click', restartGame);
+    
     updateAuthUI();
+    renderHistory();
 });
