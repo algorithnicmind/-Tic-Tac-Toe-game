@@ -94,11 +94,11 @@ describe('Tic-Tac-Toe Game Tests', () => {
     
     // Player X
     cells[0].click();
-    expect(cells[0].innerText).toBe('X');
+    expect(cells[0].textContent).toBe('X');
     
     // Player O
     cells[1].click();
-    expect(cells[1].innerText).toBe('O');
+    expect(cells[1].textContent).toBe('O');
   });
 
   test('Audio toggle should update UI and state', () => {
@@ -128,12 +128,12 @@ describe('Tic-Tac-Toe Game Tests', () => {
     // Play a move
     const cells = document.querySelectorAll('.cell');
     cells[0].click();
-    expect(cells[0].innerText).toBe('X');
+    expect(cells[0].textContent).toBe('X');
     
     // Restart game
     document.getElementById('restart-btn').click();
     const newCells = document.querySelectorAll('.cell');
-    expect(newCells[0].innerText).toBe('');
+    expect(newCells[0].textContent).toBe('');
     
     // Exit game
     document.getElementById('exit-game-btn').click();
