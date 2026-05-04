@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cells = document.querySelectorAll('.cell');
     const statusText = document.getElementById('status');
     const restartBtn = document.getElementById('restart-btn');
+    const resetScoreBtn = document.getElementById('reset-score-btn');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
     const modalMsg = document.getElementById('modal-msg');
@@ -630,6 +631,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Init ---
     restartBtn.addEventListener('click', restartGame);
+    if (resetScoreBtn) {
+        resetScoreBtn.addEventListener('click', () => {
+            scores = { X: 0, O: 0 };
+            updateScoreboard();
+        });
+    }
     playAgainBtn.addEventListener('click', restartGame);
     
     const audioBtn = document.getElementById('audio-toggle-btn');

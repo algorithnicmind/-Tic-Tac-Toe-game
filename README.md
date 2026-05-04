@@ -17,10 +17,13 @@
 ## ✨ Features
 
 - **💎 Premium Glassmorphism**: A stunning UI built with backdrop filters and vibrant animations.
-- **🤖 Smart AI (Minimax)**: Challenge an unbeatable algorithm that never makes a mistake.
+- **🤖 Smart AI**: Challenge an algorithm with variable difficulties (Easy, Medium, Impossible) powered by Minimax.
 - **👥 Local Multiplayer**: Competitive play with custom player names and score tracking.
 - **🔒 Integrated Auth**: Secure-looking mock authentication for a professional user experience.
 - **📱 Fully Responsive**: Seamlessly play on any device, from desktop to mobile.
+- **📏 Dynamic Grid Sizes**: Choose between Classic (3x3), Advanced (4x4), and Pro (5x5) grids.
+- **🏆 Match History**: Persistent match history saved securely to LocalStorage.
+- **🎵 Immersive Audio**: Enjoy ambient background music and reactive sound effects during gameplay.
 
 ---
 
