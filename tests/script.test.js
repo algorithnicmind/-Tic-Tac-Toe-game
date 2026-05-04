@@ -100,4 +100,42 @@ describe('Tic-Tac-Toe Game Tests', () => {
     cells[1].click();
     expect(cells[1].innerText).toBe('O');
   });
+
+  test('Audio toggle should update UI and state', () => {
+    const audioBtn = document.getElementById('audio-toggle-btn');
+    expect(audioBtn.innerText).toBe('🔇');
+    audioBtn.click();
+    expect(audioBtn.innerText).toBe('🔊');
+    audioBtn.click();
+    expect(audioBtn.innerText).toBe('🔇');
+  });
+
+  test('Grid size selection should create correct number of cells', () => {
+    // Select 4x4
+    const gridSizeSelect = document.getElementById('grid-size');
+    gridSizeSelect.value = '4';
+    
+    document.getElementById('start-game-btn').click();
+    const cells = document.querySelectorAll('.cell');
+    expect(cells.length).toBe(16);
+  });
+
+  test('Game controls like restart and exit should function properly', () => {
+    document.getElementById('start-game-btn').click();
+    
+    // Play a move
+    const cells = document.querySelectorAll('.cell');
+    cells[0].click();
+    expect(cells[0].innerText).toBe('X');
+    
+    // Restart game
+    document.getElementById('restart-btn').click();
+    const newCells = document.querySelectorAll('.cell');
+    expect(newCells[0].innerText).toBe('');
+    
+    // Exit game
+    document.getElementById('exit-game-btn').click();
+    const selectionSection = document.getElementById('selection');
+    expect(selectionSection.classList.contains('active')).toBe(true);
+  });
 });
