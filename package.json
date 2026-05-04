@@ -1,0 +1,12 @@
+{
+  "name": "-tic-tac-toe-game",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">\r   <img src=\"assets/banner.png\" alt=\"Tactix Pro Banner\" width=\"100%\">",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
