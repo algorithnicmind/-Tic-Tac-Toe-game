@@ -102,12 +102,14 @@ describe('Tic-Tac-Toe Game Tests', () => {
   });
 
   test('Audio toggle should update UI and state', () => {
-    const audioBtn = document.getElementById('audio-toggle-btn');
-    expect(audioBtn.innerText).toBe('🔇');
+    let audioBtn = document.getElementById('audio-toggle-btn');
+    expect(audioBtn.textContent).toBe('🔇');
     audioBtn.click();
-    expect(audioBtn.innerText).toBe('🔊');
+    audioBtn = document.getElementById('audio-toggle-btn'); // Re-fetch in case it gets re-rendered
+    expect(audioBtn.textContent).toBe('🔊');
     audioBtn.click();
-    expect(audioBtn.innerText).toBe('🔇');
+    audioBtn = document.getElementById('audio-toggle-btn');
+    expect(audioBtn.textContent).toBe('🔇');
   });
 
   test('Grid size selection should create correct number of cells', () => {
