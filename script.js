@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleAudio() {
         isAudioEnabled = !isAudioEnabled;
         const btn = document.getElementById('audio-toggle-btn');
-        if (btn) btn.innerText = isAudioEnabled ? '🔊' : '🔇';
+        if (btn) btn.textContent = isAudioEnabled ? '🔊' : '🔇';
         
         if (isAudioEnabled) {
             initAudio();
@@ -338,8 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
             player2Name = aiDifficulty === 'easy' ? 'Easy AI' : aiDifficulty === 'medium' ? 'Medium AI' : 'Impossible AI';
         }
         
-        labelX.innerText = player1Name.toUpperCase();
-        labelO.innerText = player2Name.toUpperCase();
+        labelX.textContent = player1Name.toUpperCase();
+        labelO.textContent = player2Name.toUpperCase();
         
         createBoard();
         restartGame();
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleCellPlayed(clickedCell, clickedCellIndex) {
         gameState[clickedCellIndex] = currentPlayer;
-        clickedCell.innerText = currentPlayer;
+        clickedCell.textContent = currentPlayer;
         clickedCell.classList.add(currentPlayer.toLowerCase());
         playMoveSound(currentPlayer);
     }
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handlePlayerChange() {
         currentPlayer = currentPlayer === "X" ? "O" : "X";
         const name = currentPlayer === 'X' ? player1Name : player2Name;
-        statusText.innerText = `${name}'s Turn`;
+        statusText.textContent = `${name}'s Turn`;
         
         if (currentPlayer === 'X') {
             cardX.classList.add('active');
@@ -437,13 +437,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateScoreboard() {
-        scoreXText.innerText = scores.X;
-        scoreOText.innerText = scores.O;
+        scoreXText.textContent = scores.X;
+        scoreOText.textContent = scores.O;
     }
 
     function showModal(title, msg) {
-        modalTitle.innerText = title;
-        modalMsg.innerText = msg;
+        modalTitle.textContent = title;
+        modalMsg.textContent = msg;
         modalOverlay.classList.add('active');
     }
 
@@ -471,13 +471,13 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayer = "X";
         const totalCells = currentGridSize * currentGridSize;
         gameState = new Array(totalCells).fill("");
-        statusText.innerText = `${player1Name}'s Turn`;
+        statusText.textContent = `${player1Name}'s Turn`;
         cardX.classList.add('active');
         cardO.classList.remove('active');
         
         const allCells = document.querySelectorAll('.cell');
         allCells.forEach(cell => {
-            cell.innerText = "";
+            cell.textContent = "";
             cell.classList.remove('x', 'o', 'winner');
         });
         modalOverlay.classList.remove('active');
